@@ -1,72 +1,59 @@
-import { useBalance } from "./useBalance.js";
+import { useEffect, useState } from "react";
+import { useProviders } from "./useBalance.js";
+import Overview from "./Overview.jsx";
+import ProviderPage from "./ProviderPage.jsx";
 
-const amountFormat = new Intl.NumberFormat(undefined, {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-function RefreshIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
-      />
-    </svg>
-  );
-}
-
-function BalanceList({ balances }) {
-  if (balances === null) return <div className="skeleton" />;
-  if (balances.length === 0) return <p>No balances to show.</p>;
-  return balances.map(({ currency, balance }) => (
-    <div className="row" key={currency}>
-      <span className="currency">{currency}</span>
-      <span className="amount">{amountFormat.format(Number(balance) || 0)}</span>
-    </div>
-  ));
+// Minimal hash router: #/ = overview, #/<provider-id> = that dashboard.
+function useRoute() {
+  const read = () => window.location.hash.replace(/^#\/?/, "");
+  const [route, setRoute] = useState(read);
+  useEffect(() => {
+    const onChange = () => {
+      setRoute(read());
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener("hashchange", onChange);
+    return () => window.removeEventListener("hashchange", onChange);
+  }, []);
+  return route;
 }
 
 export default function App() {
-  const { balances, fetchedAt, error, notice, loading, refresh } = useBalance();
-  // Hide the skeleton if the very first load failed.
-  const shown = balances === null && error ? [] : balances;
+  const { providers, error } = useProviders();
+  const route = useRoute();
+  const current = providers?.find((p) => p.id === route);
 
   return (
-    <main className="wrap">
-      <header className="top">
-        <div className="brand">
-          <span className="dot" aria-hidden="true" />
-          <span>ClickPesa</span>
-        </div>
-        <button
-          className={`btn${loading ? " spin" : ""}`}
-          type="button"
-          onClick={refresh}
-          disabled={loading}
-        >
-          <RefreshIcon />
-          Refresh
-        </button>
-      </header>
+    <div className="layout">
+      <nav className="nav" aria-label="Providers">
+        <a className="brand" href="#/">
+          <span className="logo" aria-hidden="true">B</span>
+          Balances
+        </a>
+        <ul>
+          <li>
+            <a href="#/" className={!current ? "active" : ""}>
+              Overview
+            </a>
+          </li>
+          {providers?.map((p) => (
+            <li key={p.id}>
+              <a href={`#/${p.id}`} className={current?.id === p.id ? "active" : ""}>
+                <span className={`dot dot-${p.id}`} aria-hidden="true" />
+                {p.name}
+                {p.status !== "ready" && <span className="nav-dim" aria-hidden="true">·</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
-      <section className="card" aria-live="polite">
-        <p className="label">Available balance</p>
-        <div className="balances">
-          {shown?.length === 0 && error ? null : <BalanceList balances={shown} />}
-        </div>
-        {error ? (
-          <p className="status error">{error}</p>
-        ) : notice ? (
-          <p className="status">{notice}</p>
-        ) : fetchedAt ? (
-          <p className="status">Last updated {fetchedAt.toLocaleTimeString()}</p>
-        ) : null}
-      </section>
-
-      <p className="foot">
-        Updates every 60 seconds. Your API keys stay on the server and never reach this page.
-      </p>
-    </main>
+      <main className="content">
+        {error && <p className="status error">{error}</p>}
+        {!providers && !error && <div className="skeleton" />}
+        {providers && (current ? <ProviderPage key={current.id} provider={current} /> : <Overview providers={providers} />)}
+        <p className="foot">API keys stay on the server and never reach this page.</p>
+      </main>
+    </div>
   );
 }
