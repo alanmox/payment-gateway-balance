@@ -2,6 +2,35 @@
 
 A small full-stack dashboard that shows your available balance across Tanzanian and global payment gateways. It has no database: auth tokens are cached in memory and in `backend/.token-cache.json`, which is git-ignored and readable only by you.
 
+![Overview of all provider balances](docs/screenshots/overview.png)
+
+## Screenshots
+
+> Screenshots use demo data, not real balances.
+
+### Provider dashboard
+Each provider has its own page with available, pending and total balances where the API provides them.
+
+![Stripe dashboard showing available and pending balances](docs/screenshots/provider-stripe.png)
+
+### Dark mode
+The theme follows your system light/dark setting.
+
+![Overview in dark mode](docs/screenshots/overview-dark.png)
+
+### Setup hints and unsupported providers
+A provider without keys shows exactly which variables to add. Providers with no balance API explain why.
+
+| Not configured | No balance API |
+|---|---|
+| ![Selcom not configured](docs/screenshots/provider-not-configured.png) | ![PalmPesa has no balance API](docs/screenshots/provider-unsupported.png) |
+
+### Mobile
+
+<img src="docs/screenshots/mobile.png" alt="Snippe dashboard on mobile" width="300" />
+
+## Supported providers
+
 | Provider  | Balance endpoint | Auth |
 |-----------|------------------|------|
 | ClickPesa | `GET /third-parties/account/balance` | client-id + api-key → token (1h) |
