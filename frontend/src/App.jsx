@@ -28,7 +28,7 @@ function BalanceList({ balances }) {
 }
 
 export default function App() {
-  const { balances, fetchedAt, error, loading, refresh } = useBalance();
+  const { balances, fetchedAt, error, notice, loading, refresh } = useBalance();
   // Hide the skeleton if the very first load failed.
   const shown = balances === null && error ? [] : balances;
 
@@ -57,6 +57,8 @@ export default function App() {
         </div>
         {error ? (
           <p className="status error">{error}</p>
+        ) : notice ? (
+          <p className="status">{notice}</p>
         ) : fetchedAt ? (
           <p className="status">Last updated {fetchedAt.toLocaleTimeString()}</p>
         ) : null}
